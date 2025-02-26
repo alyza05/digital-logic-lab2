@@ -1,27 +1,39 @@
 /*
- * Copyright (c) 2024 Your Name
+ * Copyright (c) 2024 Alyza Alfonso
  * SPDX-License-Identifier: Apache-2.0
  */
 
 `default_nettype none
 
-module tt_um_example (
-    input  wire [7:0] ui_in,    // Dedicated inputs
-    output wire [7:0] uo_out,   // Dedicated outputs
-    input  wire [7:0] uio_in,   // IOs: Input path
-    output wire [7:0] uio_out,  // IOs: Output path
-    output wire [7:0] uio_oe,   // IOs: Enable path (active high: 0=input, 1=output)
-    input  wire       ena,      // always 1 when the design is powered, so you can ignore it
-    input  wire       clk,      // clock
-    input  wire       rst_n     // reset_n - low to reset
+module priority_encoder (
+    input  wire [15:0] In,       // 16-bit input
+    output reg  [7:0]  C         // 8-bit output
 );
 
-  // All output pins must be assigned. If not used, assign to 0.
-  assign uo_out  = ui_in + uio_in;  // Example: ou_out is the sum of ui_in and uio_in
-  assign uio_out = 0;
-  assign uio_oe  = 0;
+    always @* begin
+        // Initialize C to default value for the special case
+        C = 8'b11110000; // This is for the case when all bits are 0
 
-  // List all unused inputs to prevent warnings
-  wire _unused = &{ena, clk, rst_n, 1'b0};
+        // Check each bit from the MSB (In[15]) to the LSB (In[0])
+        casez (In)
+            16'b1???????_??????? : C = 8'd15; // In[15] is 1
+            16'b01??????_??????? : C = 8'd14; // In[14] is 1
+            16'b001?????_??????? : C = 8'd13; // In[13] is 1
+            16'b0001????_??????? : C = 8'd12; // In[12] is 1
+            16'b00001???_??????? : C = 8'd11; // In[11] is 1
+            16'b000001??_??????? : C = 8'd10; // In[10] is 1
+            16'b0000001?_??????? : C = 8'd9;  // In[9] is 1
+            16'b00000001_???????: C = 8'd8;  // In[8] is 1
+            16'b00000000_1??????: C = 8'd7;  // In[7] is 1
+            16'b00000000_01?????: C = 8'd6;  // In[6] is 1
+            16'b00000000_001????: C = 8'd5;  // In[5] is 1
+            16'b00000000_0001???: C = 8'd4;  // In[4] is 1
+            16'b00000000_00001??: C = 8'd3;  // In[3] is 1
+            16'b00000000_000001?: C = 8'd2;  // In[2] is 1
+            16'b00000000_0000001: C = 8'd1;  // In[1] is 1
+            16'b00000000_0000000: C = 8'd0;  // In[0] is 1
+        endcase
+    end
 
 endmodule
+
